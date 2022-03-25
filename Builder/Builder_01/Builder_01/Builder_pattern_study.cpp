@@ -17,8 +17,7 @@ public:
 	std::vector<HtmlElement> elements;
 	const size_t indent_size = 2;
 
-	HtmlElement() { }
-	HtmlElement(const std::string& name, const std::string& text) : name(name), text(text){ }
+	//API 사용 의도 알려주기
 
 	std::string  str(int indent = 0) const
 	{
@@ -26,41 +25,84 @@ public:
 		std::string i(indent_size * indent, ' ');
 		oss << i << "<" << name << ">" << std::endl;
 		if (text.size() > 0)
-			oss << std::string(indent_size * (indent + 1), ' ') << text <<std::endl;
+			oss << std::string(indent_size * (indent + 1), ' ') << text << std::endl;
 
 		for (const auto& e : elements)
 		{
-			oss << (std::string)"1!!!!!" << std::endl;
+			//oss << (std::string)"1!!!!!" << std::endl;
 			oss << e.str(indent + 1);
 		}
-	
+
 		oss << i << "</" << name << ">" << std::endl;
 		return oss.str();
 	}
-	
-	/*static std::unique_ptr<HtmlBuilder> build(std::string root_name)
+
+
+	static std::unique_ptr<HtmlBuilder> build(std::string root_name) 
 	{
+		
 		return std::make_unique<HtmlBuilder>(root_name);
-	}*/
+	}
+	HtmlElement() { }
+	HtmlElement(const std::string& name, const std::string& text) : name(name), text(text){ }
 
 };
 
 //단순 빌더 패턴 2022.03.23
-class HtmlBuilder
+//class HtmlBuilder
+//{
+//public:
+//	HtmlElement root;
+//
+//	HtmlBuilder(std::string root_name)
+//	{
+//		root.name = root_name;
+//	}
+//
+//	void add_child(std::string child_name, std::string child_text)
+//	{
+//		HtmlElement e(child_name, child_text);
+//		root.elements.emplace_back(e);
+//	}
+//
+//	std::string str()
+//	{
+//		return root.str();
+//	}
+//};
+
+//흐름식 빌더 패턴 2022.03.25
+//만약 빌더 add_child 함수를 자기 자신의 클래스를 참조로 리턴 되게 하면 꼬리를 무는 흐름식 인터페이스가 가능하다.
+class HtmlBuilder 
 {
 public:
 	HtmlElement root;
 
-	HtmlBuilder(std::string root_name)
+	operator HtmlElement() const
+	{ 
+		return root; 
+	}
+
+	HtmlBuilder(std::string root_name) 
 	{
 		root.name = root_name;
 	}
 
-	void add_child(std::string child_name, std::string child_text)
+	HtmlBuilder& add_child(std::string child_name, std::string child_text)
 	{
 		HtmlElement e(child_name, child_text);
 		root.elements.emplace_back(e);
+		return *this;
 	}
+
+	//포인터로도 가능 이는 개발자의 자유이다.
+	HtmlBuilder* add_child2(std::string child_name, std::string child_text)
+	{
+		HtmlElement e(child_name, child_text);
+		root.elements.emplace_back(e);
+		return this;
+	}
+
 
 	std::string str()
 	{
@@ -69,11 +111,12 @@ public:
 };
 
 
+
 int main()
 {
 
-	std::string words[] = { "hello", "world" };
-	std::ostringstream oss;
+	//std::string words[] = { "hello", "world" };
+	//std::ostringstream oss;
 
 	/*oss << "<ul>";
 	for (auto w : words)
@@ -98,14 +141,25 @@ int main()
 
 	printf(list.str().c_str());*/
 
-	//단순 빌더 클래스 사용 
-	HtmlBuilder builder("ul");
+	//단순 빌더 패턴 사용 
+	/*HtmlBuilder builder("ul");
 	builder.add_child("li", "hello");
 	builder.add_child("li", "world");
+	std::cout << builder.str() << std::endl;*/
+
+	//흐름식 빌더 패턴 사용 
+	/*HtmlBuilder builder("ul");
+	builder.add_child("li", "hello").add_child("li", "world");
 	std::cout << builder.str() << std::endl;
 
-	
+	HtmlBuilder* builder2 = new HtmlBuilder("ul");
+	builder2->add_child2("li", "hello")->add_child2("li", "world");
+	std::cout << builder2->str() << std::endl;*/
 
+	//의도를 알려주기 
+	auto builder2 = HtmlElement::build("ul");
+	builder2->add_child2("li", "hello")->add_child2("li", "world");
+	std::cout << builder2->str() << std::endl;
 
 	return 0;
 }
