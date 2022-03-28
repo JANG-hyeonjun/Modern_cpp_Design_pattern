@@ -43,6 +43,8 @@ public:
 		
 		return std::make_unique<HtmlBuilder>(root_name);
 	}
+	friend HtmlBuilder;
+protected:
 	HtmlElement() { }
 	HtmlElement(const std::string& name, const std::string& text) : name(name), text(text){ }
 
